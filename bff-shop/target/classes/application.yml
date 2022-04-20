@@ -1,0 +1,15 @@
+server:
+  port: 8088
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+bff:
+  jwt:
+    secret: '(aR]e)rh%m3M$NU9QmGHS|G^56K|ri((0#NkUuP8OdndyNtCU2WT8QRf,dff@NOd{c$M,^CZag,n{{9sM^SdMzRq^xTJ#xBFcN}'
+    expiration: 3600000
+  api-name: 'Shop Style'

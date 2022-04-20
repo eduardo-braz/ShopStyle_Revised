@@ -1,0 +1,545 @@
+openapi: 3.0.1
+info:
+  title: MS Catalog
+  description: O micro-serviço Catalog tem a função de armazenar e gerenciar os produtos
+    e categorias que estarão disponíveis na aplicação.
+  termsOfService: https://github.com/eduardo-braz/shop-Style_compass
+  contact:
+    name: Contate o desenvolvedor
+    url: https://compass.uol/
+  license:
+    name: Licença pública geral GNU v3
+    url: https://www.gnu.org/licenses/gpl-3.0.pt-br.html
+  version: v1
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+tags:
+- name: Category Controller
+  description: Controller para gerenciamento de categorias.
+- name: Variation Controller
+  description: Controller para gerenciamento de variações de produtos.
+- name: Product Controller
+  description: Controller para gerenciamento de produtos.
+paths:
+  /v1/variations/{id}:
+    get:
+      tags:
+      - Variation Controller
+      summary: Busca produto por id de variação
+      description: "Busca o produto que possui a variação de {id} salvo no banco"
+      operationId: findProductByIdVariation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+                id: 624255b42bcbf85c928aada5
+                name: Camisa Oficial do Flamengo
+                description: A camisa pra você que é rubro-negro
+                active: true
+                variations:
+                - id: 62435f8dcafab6581f01ce7c
+                  color: Padrão
+                  size: M
+                  price: 249.99
+                  quantity: 10
+                - id: 6244950a39b4292ce7e97dcd
+                  color: Vermelha
+                  size: M
+                  price: 169.9
+                  quantity: 2
+        "404":
+          description: Variação não encontrada
+    put:
+      tags:
+      - Variation Controller
+      summary: Atualiza variação
+      description: Atualiza os dados da variação com o id especificado
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariationDTO'
+            example:
+              color: Azul
+              size: M
+              price: 150.9
+              quantity: 2
+              product_id: 624255b42bcbf85c928aada5
+        required: true
+      responses:
+        "200":
+          description: Variação alterada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariationDTO'
+              example:
+                id: 6245a0bc8c13e62ab59340c6
+                color: Azul
+                size: M
+                price: 150.9
+                quantity: 2
+        "404":
+          description: Variação não encontrada
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+                field: color
+                error: Campo Cor não pode estar vazio ou ser nulo!
+    delete:
+      tags:
+      - Variation Controller
+      summary: Deleta variação
+      description: "Deleta a variação de {id} salvo no banco"
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Variação deletada
+        "404":
+          description: Variação não encontrada
+  /v1/products/{id}:
+    get:
+      tags:
+      - Product Controller
+      summary: Busca produto
+      description: "Busca o produto de {id} salvo no banco"
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Produto não encontrado
+        "200":
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+                id: 6244ba51a4411103b85870ae
+                name: Camisa Oficial do Fluminense
+                description: A camisa pra você que é tricolor de coração
+                active: true
+                variations: []
+    put:
+      tags:
+      - Product Controller
+      summary: Atualiza produto
+      description: Atualiza os dados do produto com o id especificado
+      operationId: update_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+            example:
+              name: Camisa Oficial do Fluminense
+              description: A camisa pra você que é tricolor de coração
+              active: true
+              category_ids:
+              - 6241be7437103a76955a57c5
+              - 62421756263a88136a377751
+        required: true
+      responses:
+        "200":
+          description: Produto alterado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+                id: 6244ba51a4411103b85870ae
+                name: Camisa Oficial do Fluminense
+                description: A camisa pra você que é tricolor de coração
+                active: true
+                variations: []
+        "404":
+          description: Produto não encontrado
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+              - field: name
+                error: Nome não pode estar vazio ou ser nulo!
+    delete:
+      tags:
+      - Product Controller
+      summary: Deleta produto
+      description: "Deleta o produto de {id} salvo no banco"
+      operationId: delete_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Produto não encontrado
+        "200":
+          description: Produto deletado
+  /v1/categories/{id}:
+    put:
+      tags:
+      - Category Controller
+      summary: Atualiza categoria
+      description: Atualiza os dados da categoria com o id especificado
+      operationId: update_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+            example:
+              name: Camisas de Futebol
+              active: true
+        required: true
+      responses:
+        "404":
+          description: Categoria não encontrada
+        "200":
+          description: Categoria alterada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDTO'
+              example:
+                id: 6241be7437103a76955a57c5
+                name: Camisas de Futebol
+                active: true
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+              - field: name
+                error: Nome não pode estar vazio ou ser nulo!
+    delete:
+      tags:
+      - Category Controller
+      summary: Deleta categoria
+      description: "Deleta a categoria de {id} salva no banco"
+      operationId: delete_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Categoria não encontrada
+        "200":
+          description: Categoria deletada
+  /v1/variations:
+    post:
+      tags:
+      - Variation Controller
+      summary: Cadastrar variação
+      description: Cadastra uma nova variação
+      operationId: save
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariationDTO'
+            example:
+              color: Azul
+              size: M
+              price: 150.9
+              quantity: 2
+              product_id: 624255b42bcbf85c928aada5
+        required: true
+      responses:
+        "201":
+          description: Variação cadastrada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariationDTO'
+              example:
+                id: 6245a0bc8c13e62ab59340c6
+                color: Azul
+                size: M
+                price: 150.9
+                quantity: 2
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+                field: color
+                error: Campo Cor não pode estar vazio ou ser nulo!
+  /v1/products:
+    get:
+      tags:
+      - Product Controller
+      summary: Buscas todos produtos
+      description: Buscas todos os produto salvos no banco
+      operationId: getAllProducts
+      responses:
+        "200":
+          description: Produtos localizados com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+              - id: 624255b42bcbf85c928aada5
+                name: Camisa Oficial do Flamengo
+                description: A camisa pra você que é rubro-negro
+                active: true
+                variations:
+                - id: 62435f8dcafab6581f01ce7c
+                  color: Padrão
+                  size: M
+                  price: 249.99
+                  quantity: 10
+                - id: 6244950a39b4292ce7e97dcd
+                  color: Vermelha
+                  size: M
+                  price: 169.9
+                  quantity: 2
+              - id: 62448b2b4124eb176b0dcb2d
+                name: Camisa retrô
+                description: A camisa para lembrar dos bons momentos
+                active: true
+                variations: []
+    post:
+      tags:
+      - Product Controller
+      summary: Cadastrar produto
+      description: Cadastra um novo produto
+      operationId: save_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+            example:
+              name: Camisa Oficial do Fluminense
+              description: A camisa pra você que é tricolor de coração
+              active: true
+              category_ids:
+              - 6241be7437103a76955a57c5
+              - 62421756263a88136a377751
+        required: true
+      responses:
+        "201":
+          description: Produto cadastrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+                id: 6244ba51a4411103b85870ae
+                name: Camisa Oficial do Fluminense
+                description: A camisa pra você que é tricolor de coração
+                active: true
+                variations: []
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+              - field: name
+                error: Nome não pode estar vazio ou ser nulo!
+  /v1/categories:
+    get:
+      tags:
+      - Category Controller
+      summary: Buscas todas categorias
+      description: Buscas todas as categoria salvas no banco
+      operationId: getAll
+      responses:
+        "200":
+          description: Categorias localizadas com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDTO'
+              example:
+              - id: 6241be7437103a76955a57c5
+                name: Camisas de Futebol
+                active: true
+              - id: 62421756263a88136a377751
+                name: Blusas de Frio
+                active: true
+    post:
+      tags:
+      - Category Controller
+      summary: Cadastrar categoria
+      description: Cadastra uma nova categoria
+      operationId: save_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryDTO'
+            example:
+              name: Camisas de Futebol
+              active: true
+        required: true
+      responses:
+        "201":
+          description: Categoria cadastrada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDTO'
+              example:
+                id: 6241be7437103a76955a57c5
+                name: Camisas de Futebol
+                active: true
+        "400":
+          description: Parâmetro(s) inválido(s)
+          content:
+            aplication/json:
+              example:
+              - field: name
+                error: Nome não pode estar vazio ou ser nulo!
+  /v1/categories/{id}/products:
+    get:
+      tags:
+      - Category Controller
+      summary: Buscas todos produtos da categoria
+      description: Buscas todos os produtos da categoria do id informado.
+      operationId: getProductsOfCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Categoria não encontrada
+        "200":
+          description: Produtos localizados com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+              example:
+              - id: 624255b42bcbf85c928aada5
+                name: Camisa Oficial do Flamengo
+                description: A camisa pra você que é rubro-negro
+                active: true
+                variations:
+                - id: 62435f8dcafab6581f01ce7c
+                  color: Padrão
+                  size: M
+                  price: 249.99
+                  quantity: 10
+                - id: 6244950a39b4292ce7e97dcd
+                  color: Branca
+                  size: M
+                  price: 169.9
+                  quantity: 2
+              - id: 6243769e84363a18f25f0d9a
+                name: Camiseta casual
+                description: Camiseta casual de tamanho único
+                active: true
+                variations: []
+              - id: 62448b2b4124eb176b0dcb2d
+                name: Camisa retrô
+                description: A camisa para lembrar dos bons momentos
+                active: false
+                variations: []
+components:
+  schemas:
+    VariationDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        color:
+          type: string
+        size:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+          format: int32
+    ProductDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variation'
+    Variation:
+      type: object
+      properties:
+        id:
+          type: string
+        color:
+          type: string
+        size:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+          format: int32
+    CategoryDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean

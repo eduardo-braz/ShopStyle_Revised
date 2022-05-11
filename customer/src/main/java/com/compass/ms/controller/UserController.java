@@ -43,7 +43,6 @@ public class UserController implements UserControllerInterface{
                 HttpStatus.OK);
     }
 
-
     @Override
     @PutMapping("/users/{id}")
     @Transactional

@@ -1,93 +1,120 @@
 package com.compass.ms.service;
 
 import com.compass.ms.DTO.UserDTO;
-import com.compass.ms.DTO.UserFormDTO;
-import com.compass.ms.controller.UserController;
 import com.compass.ms.entity.User;
 import com.compass.ms.exceptions.EntityExceptionResponse;
 import com.compass.ms.repository.UserRepository;
-import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+import static com.compass.ms.entity.Instances.*;
+import static com.compass.ms.entity.Instances.userInstance;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@WebMvcTest(UserController.class)
+@ExtendWith(SpringExtension.class)
+@DisplayName("User Service Test")
 public class UserServiceTest {
 
     @MockBean
-    private UserService userService;
+    UserRepository userRepository;
 
-    @MockBean
-    private UserRepository userRepository;
+    UserService userService;
 
-    @Mock
-    private UserFormDTO userFormDTO;
-
-    @Mock
-    private UserDTO userDTO;
-
-    @Mock
-    private User user;
-
-    @Test
-    @DisplayName("Deve salvar usuário")
-    public void shouldHaveSaveUser() throws Exception {
-        Mockito.when(userService.save(userFormDTO)).thenReturn(userDTO);
-        Mockito.when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
-
-        UserDTO userSave = userService.save(userFormDTO);
-
-        Assert.assertNotNull(userSave);
-        Assert.assertEquals(userDTO, userSave);
+    @BeforeEach
+    public void init(){
+        userService = new UserServiceImpl(userRepository);
     }
 
-    /* Confirmar de método está realmente fazendo testes de maneira correta */
     @Test
-    @DisplayName("Não deve salvar usuário cujo email existe no BD")
-    public void mustNotSaveUserWithEmailExistingEmail() throws Exception {
-        Mockito.when(userService.save(userFormDTO)).thenThrow(EntityExceptionResponse.class);
-        try {
-            UserDTO saved = userService.save(userFormDTO);
-            Assert.assertNotEquals(saved, userDTO);
-        } catch (Exception e) {}
+    @DisplayName("Deve salvar um usuário")
+    public void shouldHaveSaveUser(){
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenReturn(userInstance());
 
-        Assert.assertThrows(EntityExceptionResponse.class, () -> userService.save(userFormDTO));
+        UserDTO saved = userService.save(userFormDtoInstance());
+        succesfullCaseAssertions(userDtoInstance(), saved);
     }
 
-    /* Confirmar de método está realmente fazendo testes de maneira correta */
     @Test
-    @DisplayName("Deve buscar usuário existe no BD")
-    public void shouldHaveFindUser() throws Exception {
-        Mockito.when(userService.findId(1L)).thenReturn(userDTO);
+    @DisplayName("Deve lançar exceção ao tentar salva usuário cujo email exista no banco")
+    public void shouldHaveThrowExceptionWhenSaveUserIfUserEmailExists(){
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(userInstance()));
+        EntityExceptionResponse exception = assertThrows(EntityExceptionResponse.class, () -> {
+            userService.save(userFormDtoInstance());
+        });
+        emailAssertions(exception);
+    }
 
+    @Test
+    @DisplayName("Deve buscar usuário por ID")
+    public void shouldHaveFindUserById(){
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(userInstance()));
         UserDTO found = userService.findId(1L);
-
-        Assert.assertEquals(found, userDTO);
+        succesfullCaseAssertions(userDtoInstance(), found);
     }
 
-    /* Confirmar de método está realmente fazendo testes de maneira correta */
     @Test
-    @DisplayName("Não encontra usuário inexistente no BD")
-    public void mustNotFindUser() throws Exception {
-        Mockito.when(userService.findId(1L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
-        try {
-            UserDTO found = userService.findId(1L);
-            Assert.assertNotEquals(found, userDTO);
-        } catch (Exception e) {}
-        Assert.assertThrows(ResponseStatusException.class, () -> userService.findId(1L));
+    @DisplayName("Deve lançar exceção ao buscar usuário inexistente")
+    public void shouldHaveThrowExceptionWhenFindUserByInvalidId(){
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.findId(1L);
+        });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+
     }
 
-    /* Ver como devem ser os testes para o metodo update */
+    @Test
+    @DisplayName("Deve atualizar dados de um usuário")
+    public void shouldHaveUpdateUser(){
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(userInstance()));
+        when(userRepository.findByEmailAndId(anyString(), anyLong())).thenReturn(Optional.empty());
+        UserDTO updated = userService.update(userFormDtoInstance(), 1L);
+        succesfullCaseAssertions(userDtoInstance(), updated);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao tentar atualizar usuário inexistente")
+    public void shouldHaveThrowExceptionWhenUpdateUserByInvalidId() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.update(userFormDtoInstance(),1L);
+        });
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao tentar atualizar usuário com email existente")
+    public void shouldHaveThrowExceptionWhenUpdateUserWithEmailExists() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(userInstance()));
+        when(userRepository.findByEmailAndId(anyString(), anyLong())).thenReturn(Optional.of(userInstance()));
+
+        EntityExceptionResponse exception = assertThrows(EntityExceptionResponse.class, () -> {
+            userService.update(userFormDtoInstance(),1L);
+        });
+
+        emailAssertions(exception);
+    }
+
+    private void emailAssertions(EntityExceptionResponse exception){
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        String expected = "Email " + userInstance().getEmail() + " existente no banco";
+        assertEquals(expected, exception.getMessage());
+    }
+
+    private void succesfullCaseAssertions(Object expected, Object actual){
+        assertNotNull(actual);
+        assertEquals(expected, actual);
+    }
+
 
 }

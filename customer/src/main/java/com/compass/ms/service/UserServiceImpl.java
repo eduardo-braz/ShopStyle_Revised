@@ -8,6 +8,7 @@ import com.compass.ms.entity.User;
 import com.compass.ms.exceptions.EntityExceptionResponse;
 import com.compass.ms.repository.UserRepository;
 import com.compass.ms.security.TokenService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,13 +23,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    ModelMapper modelMapper;
+    ModelMapper modelMapper = new ModelMapper();
 
     @Autowired
     private TokenService tokenService;

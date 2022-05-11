@@ -1,153 +1,174 @@
 package com.compass.ms.controller;
 
+import com.compass.ms.DTO.TokenDTO;
 import com.compass.ms.DTO.UserDTO;
 import com.compass.ms.DTO.UserFormDTO;
-import com.compass.ms.models.UserInstance;
+import com.compass.ms.security.SecurityConfiguration;
 import com.compass.ms.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import static com.compass.ms.entity.Instances.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@WebMvcTest(UserController.class)
+@ExtendWith(SpringExtension.class)
+@WebMvcTest
+@DisplayName("User Controller Test")
 public class UserControllerTest {
 
+    @Autowired
+    UserController userController;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
     @MockBean
-    private UserService userService;
+    UserService userService;
 
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @MockBean
+    SecurityConfiguration securityConfiguration;
 
-    private UserFormDTO userFormDTO;
+    @MockBean
+    WebSecurityConfiguration webSecurityConfiguration;
 
-    private UserDTO userDTO;
-
-    private URI uri;
-
-    private UserInstance instance = new UserInstance();
-
-    public UserControllerTest() throws URISyntaxException {
-        this.uri = new URI("/v1/users");
-        this.userFormDTO = instance.userFormDtoInstance();
-        this.userDTO = instance.userDtoInstance();
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
     }
 
     @Test
-    @DisplayName("Cria novo usuário no banco de dados")
-    public void shouldHaveReturnCreatedWhenSaveInvoked() throws Exception {
+    @DisplayName("Deve retornar status 201 ao salvar usuário")
+    public void shouldHaveReturnStatusCreatedWhenSaveUser() throws Exception {
+        when(userService.save(any(UserFormDTO.class))).thenReturn(userDtoInstance());
         mockMvc.perform( MockMvcRequestBuilders
-                .post(uri)
-                .content(objectMapper.writeValueAsString(userFormDTO))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(
-                MockMvcResultMatchers
-                        .status().isCreated()
-        );
+                        .post("/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userFormDtoInstance())))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect( result -> {
+                    UserDTO userDTO = objectMapper.readValue(result.getResponse().getContentAsString(),
+                            UserDTO.class);
+                    assertEquals(userDtoInstance(), userDTO);
+                } );
     }
 
     @Test
-    @DisplayName("Retorna BAD REQUEST quando há um parâmetro inválido")
-    public void shouldHaveReturnBadRequestWhenSaveInvokedWithInvalidRequest() throws Exception {
-        userFormDTO.setFirstName("Jo");
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders
-                .post(uri)
-                .content(objectMapper.writeValueAsString(userFormDTO))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andReturn();
-
-        Assert.assertEquals(mvcResult.getResponse().getStatus(),400);
-    }
-
-    @Test
-    @DisplayName("Busca usuario existente no banco (GET)")
-    public void shouldHaveStatusOKWhenFindIdInvoked() throws Exception {
-
-        Mockito.when(userService.findId(1L)).thenReturn(userDTO);
-
+    @DisplayName("Deve retornar status 200 ao buscar usuário")
+    public void shouldHaveReturnStatusOKWhenGetUserById() throws Exception {
+        Long id = 1L;
+        when(userService.findId(anyLong())).thenReturn(userDtoInstance());
         mockMvc.perform( MockMvcRequestBuilders
-                        .get("/v1/users/{id}", 1)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .get("/v1/users/{id}",id))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-
+                .andExpect( result -> {
+                    UserDTO userDTO = objectMapper.readValue(result.getResponse().getContentAsString(),
+                            UserDTO.class);
+                    assertEquals(userDtoInstance(), userDTO);
+                } );
     }
 
     @Test
-    @DisplayName("Retorna NOT FOUND ao buscar usuario inexistente")
-    public void shouldHaveStatusNotFoundWhenDontFindId() throws Exception {
-
-
-        Mockito.when(userService.findId(1L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
-
+    @DisplayName("Deve retornar status 200 ao atualizar usuário")
+    public void shouldHaveReturnStatusOKWhenUpdateUser() throws Exception {
+        Long id = 1L;
+        when(userService.update(any(UserFormDTO.class),anyLong())).thenReturn(userDtoInstance());
         mockMvc.perform( MockMvcRequestBuilders
-                        .get("/v1/users/{id}", 1)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andReturn();
-
+                        .put("/v1/users/{id}",id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userFormDtoInstance())))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect( result -> {
+                    UserDTO userDTO = objectMapper.readValue(result.getResponse().getContentAsString(),
+                            UserDTO.class);
+                    assertEquals(userDtoInstance(), userDTO);
+                } );
     }
 
     @Test
-    @DisplayName("Altera usuário no banco de dados")
-    public void shouldHaveReturnOkWhenUpdateInvoked() throws Exception {
+    @DisplayName("Deve retornar status 200 ao logar usuário")
+    public void shouldHaveReturnStatusOKWhenLoginUser() throws Exception {
+        when(userService.login(loginForm())).thenReturn(tokenDTO());
         mockMvc.perform( MockMvcRequestBuilders
-                .put("/v1/users/{id}", 1)
-                .content(objectMapper.writeValueAsString(userFormDTO))
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(
-                MockMvcResultMatchers
-                        .status().isOk())
-        ;
+                        .post("/v1/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginForm())))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect( result -> {
+                    TokenDTO tokenDTO = objectMapper.readValue(result.getResponse().getContentAsString(),
+                            TokenDTO.class);
+                    assertEquals(tokenDTO(), tokenDTO);
+                } );
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar status 400 tentar salvar usuário com dados inválidos")
+    public void shouldHaveReturnStatus400WhenTryingSaveUserWithInvalidParams() throws Exception {
+        when(userService.save(any(UserFormDTO.class)))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST));
+        mockMvc.perform( MockMvcRequestBuilders
+                        .post("/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userFormDtoInstance())))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
-    @DisplayName("Retorna BAD REQUEST ao tentar cadastrar usuário com dado inválido")
-    public void shouldHaveBadRequestWhenUpdateInvoked() throws Exception {
-        userFormDTO.setFirstName("ab");
-
+    @DisplayName("Deve retornar status 404 ao buscar usuário inexistente")
+    public void shouldHaveReturnStatus404WhenGetUser() throws Exception {
+        when(userService.findId(-1L))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
         mockMvc.perform( MockMvcRequestBuilders
-                        .put("/v1/users/{id}", 1)
-                        .content(objectMapper.writeValueAsString(userFormDTO))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(
-                        MockMvcResultMatchers
-                                .status().isBadRequest());
+                        .get("/v1/users/{id}",-1L))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
-    /* o método abaixo está sempre retornando status 200, mas deveria ser 404 */
+
     @Test
-    @DisplayName("Retorna NOT FOUND ao tentar cadastrar usuário com ID inválido")
-    public void shouldHaveNotFoundWhenUpdateInvoked() throws Exception {
-        Long id = -1L;
-        Mockito.when(userService.findId(id)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        userDTO.setId(-1L);
+    @DisplayName("Deve retornar status 400 tentar atualizar usuário com dados inválidos")
+    public void shouldHaveReturnStatus400WhenTryingUpdateUserWithInvalidParams() throws Exception {
+        when(userService.update(any(UserFormDTO.class),anyLong()))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST));
         mockMvc.perform( MockMvcRequestBuilders
-                        .put("/v1/users/{id}", id)
-                        .content(objectMapper.writeValueAsString(userFormDTO))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isNotFound())
-                .andReturn();
+                        .put("/v1/users/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userFormDtoInstance())))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("Deve retornar status 404 tentar atualizar usuário de ID inválido")
+    public void shouldHaveReturnStatus404WhenTryingUpdateUserWithInvalidId() throws Exception {
+        when(userService.update(any(UserFormDTO.class),anyLong()))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+        mockMvc.perform( MockMvcRequestBuilders
+                        .put("/v1/users/{id}", -1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userFormDtoInstance())))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+
 }

@@ -19,7 +19,6 @@ public class CatalogExceptionHandler {
 
     @ExceptionHandler(InvalidOperationException.class)
     public ResponseEntity<?> inactiveElement(InvalidOperationException e){
-
         return new ResponseEntity<>(new InvalidOperationDTO(e.getMessage(),
                 e.getFieldName(), e.getValue()), e.getStatus());
     }

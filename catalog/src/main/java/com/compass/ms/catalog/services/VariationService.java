@@ -8,12 +8,11 @@ import com.compass.ms.catalog.exceptions.InvalidOperationException;
 import com.compass.ms.catalog.exceptions.NotFoundException;
 import org.springframework.http.HttpStatus;
 
-import java.util.Optional;
 
 
 public interface VariationService {
 
-    public Optional<VariationDTO> save(VariationFormDTO form) throws InvalidOperationException;
+    public VariationDTO save(VariationFormDTO form) throws InvalidOperationException;
 
     public VariationDTO update(VariationFormDTO form, String id) throws InvalidOperationException;
 

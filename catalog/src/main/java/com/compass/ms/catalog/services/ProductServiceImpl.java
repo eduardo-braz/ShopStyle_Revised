@@ -10,6 +10,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,8 +77,11 @@ public class ProductServiceImpl implements ProductService{
     public Optional<ProductDTO> update(ProductFormDTO form, String id) {
         Optional<Product> found = this.productRepository.findById(id);
         if (found.isPresent()){
-            if (!found.get().isActive())
-                throw new IllegalArgumentException("Categoria(s) não está(ão) ativa(s)!");      // Substituir exceção
+            form.getCategory_ids().forEach( category -> {
+                Optional<Category> categoryFound = this.categoryRepository.findById(category);
+                if(!categoryFound.isPresent() || !categoryFound.get().isActive())
+                    throw new IllegalArgumentException("Categoria(s) não está(ão) ativa(s) ou não encontrada(s)!");
+            });
             found.get().setActive(form.isActive());
             found.get().setDescription(form.getDescription());
             found.get().setName(form.getName());
@@ -92,12 +96,8 @@ public class ProductServiceImpl implements ProductService{
     public HttpStatus delete(String id) {
         Optional<Product> found = this.productRepository.findById(id);
         if (found.isPresent()) {
-            try {
-                this.productRepository.delete(found.get());
-                return HttpStatus.OK;
-            } catch (Exception e) {
-                throw new RuntimeException();    // Substituir exceção
-            }
+            this.productRepository.delete(found.get());
+            return HttpStatus.OK;
         }
         return HttpStatus.NOT_FOUND;
     }

@@ -29,15 +29,14 @@ public class VariationServiceImpl implements VariationService{
     ModelMapper modelMapper;
 
     @Override
-    public Optional<VariationDTO> save(VariationFormDTO form) throws InvalidOperationException {
+    public VariationDTO save(VariationFormDTO form) throws InvalidOperationException {
         Optional<Product> product = this.productRepository.findById(form.getProduct_id());
         if (product.isPresent()) {
             Variation map = modelMapper.map(form, Variation.class);
             Variation variation = this.variationRepository.save(map);
             product.get().getVariations().add(variation);
             this.productRepository.save(product.get());
-            return Optional.of(
-                    modelMapper.map(variation, VariationDTO.class));
+            return modelMapper.map(variation, VariationDTO.class);
         }
         throw new InvalidOperationException("Produto não encontrado.", "product_id",
                 form.getProduct_id(), HttpStatus.NOT_FOUND);
@@ -66,7 +65,7 @@ public class VariationServiceImpl implements VariationService{
             throw new InvalidOperationException("Produto não encontrado.", "product_id",
                     form.getProduct_id(), HttpStatus.NOT_FOUND);
         }
-        throw new InvalidOperationException("Categoria não encontrada.", "id",
+        throw new InvalidOperationException("Variação não encontrada.", "id",
                 form.getProduct_id(), HttpStatus.NOT_FOUND);
     }
 

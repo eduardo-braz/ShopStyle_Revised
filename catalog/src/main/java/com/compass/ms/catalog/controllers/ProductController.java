@@ -3,7 +3,6 @@ package com.compass.ms.catalog.controllers;
 import com.compass.ms.catalog.DTOs.ProductDTO;
 import com.compass.ms.catalog.DTOs.ProductFormDTO;
 import com.compass.ms.catalog.services.ProductService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +27,9 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    ModelMapper modelMapper;
-
     @PostMapping
     public ResponseEntity<ProductDTO> save(@RequestBody @Valid ProductFormDTO form){
-        ProductDTO saved = this.productService.save(form);
-        return new ResponseEntity<>(modelMapper.map(saved, ProductDTO.class), HttpStatus.CREATED);
+        return new ResponseEntity<>(this.productService.save(form), HttpStatus.CREATED);
     }
 
     @GetMapping

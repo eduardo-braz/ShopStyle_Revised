@@ -24,15 +24,13 @@ public class VariationController {
     @PostMapping
     public ResponseEntity<VariationDTO> save(@RequestBody @Valid VariationFormDTO form)
             throws InvalidOperationException {
-        Optional<VariationDTO> saved = this.variationService.save(form);
-        return new ResponseEntity<>(saved.get(), HttpStatus.CREATED);
+        return new ResponseEntity<>(this.variationService.save(form), HttpStatus.CREATED);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<VariationDTO> update(@RequestBody @Valid VariationFormDTO form, @PathVariable String id)
             throws InvalidOperationException {
-        VariationDTO updated = this.variationService.update(form, id);
-        return new ResponseEntity<>(updated, HttpStatus.CREATED);
+        return new ResponseEntity<>(this.variationService.update(form, id), HttpStatus.OK);
     }
 
     @DeleteMapping("{id}")

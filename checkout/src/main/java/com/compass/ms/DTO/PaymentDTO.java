@@ -16,5 +16,4 @@ public class PaymentDTO {
     private PaymentType type;
     private BigDecimal discount;
     private boolean status;
-
 }

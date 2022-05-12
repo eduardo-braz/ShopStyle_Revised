@@ -4,6 +4,7 @@ import com.compass.ms.DTO.PaymentDTO;
 import com.compass.ms.DTO.PaymentFormDTO;
 import org.springframework.http.HttpStatus;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Optional;
 

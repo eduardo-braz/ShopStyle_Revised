@@ -8,6 +8,7 @@ import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest
+@DisplayName("Checkout Exception Handler Test")
 public class CheckoutExceptionHandlerTest {
 
     @Autowired
@@ -55,6 +57,7 @@ public class CheckoutExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar Response Entity ao lançar Response Status Exception")
     public void shouldHaveReturnResponseEntityWhenResponseStatusExceptionCalled(){
         ResponseStatusException exception = new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reason");
         when(paymentService.save(Instances.paymentForm())).thenAnswer(invocation -> {
@@ -69,6 +72,7 @@ public class CheckoutExceptionHandlerTest {
 
 
     @Test
+    @DisplayName("Deve retornar Response Entity ao lançar Value Instantiation")
     public void shouldHaveReturnResponseEntityWhenValueInstantiationExceptionCalled(){
         ValueInstantiationException exception = mock(ValueInstantiationException.class);
         when(exception.getOriginalMessage()).thenReturn("Invalid field");
@@ -78,6 +82,7 @@ public class CheckoutExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar Response Entity ao lançar Invalid Argument")
     public void shouldHaveReturnResponseEntityWhenInvalidArgumentInNameOrDescriptionCalled(){
         MethodArgumentNotValidException exception = new MethodArgumentNotValidException(parameter, bindException);
         ResponseEntity<?> responseEntity = checkoutExceptionHandler.invalidValueArgument(exception);
@@ -86,6 +91,7 @@ public class CheckoutExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar Response Entity ao lançar Feign Exception")
     public void shouldHaveReturnResponseEntityWhenFeignExceptionCalled() {
         FeignException feignException = mock(FeignException.class);
         Request request = mock(Request.class);
@@ -99,9 +105,6 @@ public class CheckoutExceptionHandlerTest {
         assertTrue(responseEntity.getBody().toString().contains("\"field\": \"user_id\""));
         assertTrue(responseEntity.getBody().toString().contains("\"error\": \"Not Found user_id 001\""));
     }
-
-
-
 
 
 }

@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,27 +60,27 @@ public class PurchasesServiceImpl implements PurchasesService{
             if (validatePayment(body.getPayment_id()))
                 purchase = makePurchase(body.getCart());
 
-        // Efetua compra
+        // Salva User e Payment IDs compra
         purchase.setUser_id(body.getUser_id());
         purchase.setPayment_id(body.getPayment_id());
-        PurchasesDTO saved = modelMapper.map(this.purchasesRepository.save(purchase), PurchasesDTO.class);
 
-        // Envia mensagem p/ catalog dar baixa na quantidade do produto em estoque
+        // Prepara objeto de mensagem para catalog
         List<CartDTO> cartList = new ArrayList<>();
         body.getCart().forEach(item ->{
             cartList.add(modelMapper.map(item, CartDTO.class));
         });
-        publishToCatalog(cartList);
 
-        // Envia mensagem p/ history com informações de quantidade e total
+        // Prepara objeto de mensagem para history
         HistoryDTO historyDTO = new HistoryDTO();
         historyDTO.setUser_id(body.getUser_id());
         historyDTO.setPayment_id(body.getPayment_id());
         historyDTO.setTotal(purchase.getPrice());
         historyDTO.setCart(body.getCart());
-        publishToHistory(historyDTO);
 
-        // Retorna dados de compra no corpo da requisição
+        // Envia mensagens, salva compra e retorna objeto salvo
+        publishToCatalog(cartList);
+        publishToHistory(historyDTO);
+        PurchasesDTO saved = modelMapper.map(this.purchasesRepository.save(purchase), PurchasesDTO.class);
         return saved;
     }
 
@@ -103,25 +104,27 @@ public class PurchasesServiceImpl implements PurchasesService{
      *  garante que apenas os item de mesma variação sejam inseridos na compra
      */
     private Purchases makePurchase(List<CartFormDTO> cart){
+        if (!(cart.size()>0))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cart is empty.");
         Purchases purchase = new Purchases();
-    try {
-        cart.stream().forEach( itemCart -> {
-            ProductDTO product = this.catalogClient.findProductByIdVariation(itemCart.getVariant_id());
-            if (!product.isActive())
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not active.");
-            product.getVariations().stream().forEach( productVariation -> {
-                if (itemCart.getVariant_id().equals(productVariation.getId())) {
-                    if (productVariation.getQuantity() < itemCart.getQuantity())
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity is less than available.");
-                    BigDecimal parcialPrice =
-                            productVariation.getPrice().multiply(BigDecimal.valueOf(itemCart.getQuantity()));
-                    purchase.setPrice(purchase.getPrice().add(parcialPrice));
-                    purchase.getCart().add(this.cartRepository.save(modelMapper.map(itemCart, Cart.class)));
-                }
+        try {
+            cart.stream().forEach( itemCart -> {
+                ProductDTO product = this.catalogClient.findProductByIdVariation(itemCart.getVariant_id());
+                if (!product.isActive())
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not active.");
+                product.getVariations().stream().forEach( productVariation -> {
+                    if (itemCart.getVariant_id().equals(productVariation.getId())) {
+                        if (productVariation.getQuantity() < itemCart.getQuantity())
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity is less than available.");
+                        BigDecimal parcialPrice =
+                                productVariation.getPrice().multiply(BigDecimal.valueOf(itemCart.getQuantity()));
+                        purchase.setPrice(purchase.getPrice().add(parcialPrice));
+                        purchase.getCart().add(this.cartRepository.save(modelMapper.map(itemCart, Cart.class)));
+                    }
+                });
             });
-        });
-        return purchase;
-    } catch (ResponseStatusException e) { throw new ResponseStatusException(e.getStatus(), e.getReason()); }
+            return purchase;
+        } catch (ResponseStatusException e) { throw new ResponseStatusException(e.getStatus(), e.getReason()); }
     }
 
     private void publishToHistory(HistoryDTO messsage){

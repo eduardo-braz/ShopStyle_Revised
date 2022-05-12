@@ -6,4 +6,5 @@ import com.compass.ms.DTO.PurchasesFormDTO;
 public interface PurchasesService {
 
     PurchasesDTO save(PurchasesFormDTO body);
+
 }

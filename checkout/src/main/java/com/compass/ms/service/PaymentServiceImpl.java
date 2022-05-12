@@ -8,7 +8,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerErrorException;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +28,9 @@ public class PaymentServiceImpl implements PaymentService{
     public PaymentDTO save(PaymentFormDTO form) {
         try{
             Payment saved = this.paymentRepository.save(modelMapper.map(form, Payment.class));
-            System.out.println(saved.toString());
             return modelMapper.map(saved, PaymentDTO.class);
         } catch (Exception e){
-            throw new RuntimeException();       // Mudar exceção
+            throw new ServerErrorException("Database error.", new Throwable());
         }
     }
 
@@ -56,7 +57,7 @@ public class PaymentServiceImpl implements PaymentService{
         Optional<Payment> found = this.paymentRepository.findById(id);
         if (found.isPresent()) {
             found.get().setDiscount(form.getDiscount());
-           // found.get().setType(form.getType());
+            found.get().setType(form.getType());
             found.get().setStatus(form.isStatus());
             Payment updated = this.paymentRepository.save(found.get());
             return Optional.of(modelMapper.map(updated, PaymentDTO.class));

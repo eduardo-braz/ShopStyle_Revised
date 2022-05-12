@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ public class PaymentController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<PaymentDTO> save(@RequestBody @Valid PaymentFormDTO body){
+    public ResponseEntity<PaymentDTO> save(@RequestBody @Valid PaymentFormDTO body) {
         return new ResponseEntity<>(this.paymentService.save(body), HttpStatus.CREATED);
     }
 
@@ -43,7 +44,7 @@ public class PaymentController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<PaymentDTO> save(@RequestBody @Valid PaymentFormDTO body, @PathVariable Long id){
+    public ResponseEntity<PaymentDTO> update(@RequestBody @Valid PaymentFormDTO body, @PathVariable Long id){
         Optional<PaymentDTO> updated = this.paymentService.update(body, id);
         if (updated.isPresent())
             return new ResponseEntity<>(updated.get(), HttpStatus.OK);

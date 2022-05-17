@@ -3,6 +3,7 @@ package com.compass.ms.DTOs.catalog;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,4 +18,6 @@ public class ProductDTO {
     private String description;
     private boolean active;
     private List<Variation> variations = new ArrayList<>();
+
+
 }

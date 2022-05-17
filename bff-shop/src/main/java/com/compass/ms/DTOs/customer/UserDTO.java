@@ -26,7 +26,7 @@ public class UserDTO{
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate birthdate;
     private String email;
-    private String password;
+    //private String password;
     private boolean active;
 
 }

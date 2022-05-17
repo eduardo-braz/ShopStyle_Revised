@@ -1,9 +1,10 @@
 package com.compass.ms.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TokenService {
@@ -27,8 +28,12 @@ public class TokenService {
     }
 
     public Long getUserId(String token) {
-        Claims claims = Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token).getBody();
-        return Long.parseLong(claims.getSubject());
+        try {
+            Claims claims = Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token).getBody();
+            return Long.parseLong(claims.getSubject());
+        } catch (ExpiredJwtException exceptione) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expired Token");
+        }
     }
 
 

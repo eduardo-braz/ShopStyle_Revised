@@ -50,4 +50,6 @@ public class AutenticatorTokenFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+
+
 }
